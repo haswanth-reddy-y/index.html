@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ignite Workspace // Focus & Drive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+        
+            --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+            --base-font: 'Plus Jakarta Sans', sans-serif;
+
+          
+            --app-bg-raw: 245, 247, 250; 
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            
+            --accent-primary: #f97316; 
+            --accent-secondary: #eab308; 
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+            --item-bg: rgba(255, 255, 255, 0.9);
+            --item-border: rgba(226, 232, 240, 0.8);
+            
+          
+            --part-1: #f97316;  
+            --part-2: #facc15; 
+            --part-3: #fb923c; 
+        }
+
+        [data-theme="professional"] {
+            
+            --app-bg-raw: 15, 23, 42; 
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            
+           
+            --accent-primary: #f97316;
+            --accent-secondary: #f59e0b; 
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --item-bg: rgba(15, 23, 42, 0.6);
+            --item-border: rgba(51, 65, 85, 0.5);
+            
+            
+            --part-1: #f97316;
+            --part-2: #f59e0b; 
+            --part-3: #ef4444; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--base-font);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: rgb(var(--app-bg-raw));
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 20px;
+            
+            
+            transition: background-color 0.6s var(--ease-out);
+        }
+
+        #fire-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+         
+            opacity: 0.8; 
+            transition: opacity 0.6s var(--ease-out);
+        }
+        
+        [data-theme="professional"] #fire-canvas {
+            opacity: 1; 
+        }
+
+        .workspace-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 850px) {
+            .workspace-wrapper { grid-template-columns: 430px 1fr; }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.5s ease, transform 0.3s var(--ease-out);
+        }
+        
+        .glass-panel:hover {
+            transform: translateY(-2px);
+        }
+ 
+        .global-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 20px 32px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+            transition: background 0.5s ease;
+        }
+
+        .logo-area h1 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.7px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+           background-clip:  text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-area p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 1px;
+        }
+
+        .theme-switch-wrapper { display: flex; align-items: center; gap: 10px; }
+        .theme-switch-label {
+            font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        .theme-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.08);
+            border-radius: 34px;
+            border: 1px solid var(--glass-border);
+            transition: background-color 0.3s;
+        }
+        [data-theme="professional"] .slider { background-color: rgba(255,255,255,0.08); }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 4px; bottom: 3px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        input:checked + .slider:before { transform: translateX(23px); }
+
+        .section-title {
+            font-size: 1.25rem; font-weight: 700; margin-bottom: 22px;
+            display: flex; align-items: center; gap: 9px; color: var(--text-primary);
+        }
+        .input-group { display: flex; gap: 10px; margin-bottom: 22px; }
+        
+        .form-control {
+            width: 100%; padding: 15px 18px;
+            border-radius: 14px; border: 1px solid var(--item-border);
+            background: var(--item-bg); color: var(--text-primary);
+            font-size: 0.95rem; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+
+        .btn {
+            padding: 12px 22px; border-radius: 14px; border: none;
+            font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 7px; white-space: nowrap;
+            transition: transform 0.15s var(--ease-out), opacity 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 5px 15px rgba(249, 115, 22, 0.25);
+        }
+        .btn-primary:hover { transform: translateY(-1px) scale(1.01); opacity: 0.95; }
+        .btn-primary:active { transform: translateY(1px); }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.04); border: 1px solid var(--item-border);
+            color: var(--text-primary); transition: background 0.3s;
+        }
+        [data-theme="professional"] .btn-secondary { background: rgba(255, 255, 255, 0.05); }
+        .btn-secondary:hover { background: rgba(0, 0, 0, 0.08); }
+
+        
+        .task-list { list-style: none; max-height: 400px; overflow-y: auto; padding-right: 3px; }
+        .task-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--item-bg); border: 1px solid var(--item-border);
+            padding: 16px 20px; border-radius: 16px; margin-bottom: 12px;
+            animation: igniteIn 0.4s var(--ease-out) forwards;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        @keyframes igniteIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .task-content { display: flex; align-items: center; gap: 14px; flex: 1; }
+        
+        .checkbox-container { position: relative; cursor: pointer; display: block; height: 22px; width: 22px; }
+        .checkbox-container input { opacity: 0; width: 0; height: 0; }
+        .checkmark {
+            position: absolute; top: 0; left: 0; height: 22px; width: 22px;
+            border: 2.5px solid var(--text-secondary); border-radius: 7px;
+            transition: all 0.2s ease;
+        }
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: var(--accent-primary); border-color: var(--accent-primary);
+        }
+        .checkmark:after {
+            content: ""; position: absolute; display: none;
+            left: 7px; top: 3px; width: 5px; height: 10px;
+            border: solid white; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+        }
+        .checkbox-container input:checked ~ .checkmark:after { display: block; }
+
+        .task-text { font-size: 1rem; font-weight: 500; color: var(--text-primary); }
+        .checkbox-container input:checked ~ .task-text {
+            color: var(--text-secondary); text-decoration: line-through; opacity: 0.6;
+        }
+
+        .delete-btn { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; border-radius: 6px; }
+        .delete-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+
+        .todo-footer {
+            margin-top: auto; padding-top: 18px; border-top: 1px solid var(--item-border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;
+        }
+
+  
+        .timetable-grid {
+            display: grid; grid-template-columns: 85px 1fr; gap: 12px;
+            max-height: 480px; overflow-y: auto; padding-right: 5px;
+        }
+        .time-header, .block-header {
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.7px;
+            color: var(--text-secondary); font-weight: 700; padding-bottom: 8px;
+            border-bottom: 2px solid var(--item-border);
+        }
+        .time-slot {
+            font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);
+            display: flex; align-items: center; height: 56px;
+        }
+        .schedule-card {
+            background: var(--item-bg); border: 1px solid var(--item-border);
+            border-left: 4px solid var(--accent-primary); border-radius: 12px;
+            padding: 10px 16px; height: 56px; display: flex; flex-direction: column;
+            justify-content: center; position: relative;
+            transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+        .schedule-card:hover { transform: scale(1.01) translateX(2px); background: var(--glass-bg); }
+        .schedule-card .title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
+        .schedule-card .type-tag {
+            font-size: 0.7rem; font-weight: 800; color: var(--accent-secondary);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;
+        }
+
+   
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--item-border); border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="fire-canvas"></canvas>
+
+    <div class="workspace-wrapper">
+     
+        <header class="global-header">
+            <div class="logo-area">
+                <h1 id="workspace-title">Ignite Academics</h1>
+                <p id="workspace-subtitle">Fuel your drive. Spark deep focus.</p>
+            </div>
+            <div class="theme-switch-wrapper">
+                <span class="theme-switch-label" id="mode-label">Student</span>
+                <label class="theme-switch" for="theme-toggle">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </header>
+
+    
+        <section class="glass-panel">
+            <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Active Objectives
+            </h2>
+            <div class="input-group">
+                <input type="text" id="task-input" class="form-control" placeholder="Spark a new assignment..." autocomplete="off">
+                <button id="add-task-btn" class="btn btn-primary">Ignite</button>
+            </div>
+            <ul id="task-list" class="task-list"></ul>
+            <div class="todo-footer">
+                <span id="items-counter">0 burning</span>
+                <button id="clear-task-btn" class="btn btn-secondary" style="padding: 7px 14px; font-size: 0.8rem;">Extinguish Done</button>
+            </div>
+        </section>
+
+    
+        <section class="glass-panel">
+            <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Focus Routine
+            </h2>
+            <div class="timetable-grid">
+                <div class="time-header">Time</div>
+                <div class="block-header">Activity Routine</div>
+                <div id="timetable-slots-container" style="display: contents;"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+       
+        const themeToggle = document.getElementById('theme-toggle');
+        const modeLabel = document.getElementById('mode-label');
+        const workspaceTitle = document.getElementById('workspace-title');
+        const workspaceSubtitle = document.getElementById('workspace-subtitle');
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskList = document.getElementById('task-list');
+        const itemsCounter = document.getElementById('items-counter');
+        const clearTaskBtn = document.getElementById('clear-task-btn');
+        const slotsContainer = document.getElementById('timetable-slots-container');
+
+        let tasks = [
+            { id: 1, text: "Fuel knowledge: Complete Quantum notes", completed: false },
+            { id: 2, text: "Forge final iteration of Synthesis project", completed: true }
+        ];
+
+        const academicSchedule = [
+            { time: "08:30 AM", title: "Morning Ignite: Lecture Series", type: "Core Study" },
+            { time: "11:00 AM", title: "Deep Burn: Research Block", type: "Deep Focus" },
+            { time: "02:30 PM", title: "Collaborative Spark: Project Sync", type: "Collaboration" }
+        ];
+
+        const executiveSchedule = [
+            { time: "09:00 AM", title: "Executive Standup & Strategy", type: "Coordination" },
+            { time: "10:30 AM", title: "High-Impact Execution Sprint", type: "Execution" },
+            { time: "03:00 PM", title: "Stakeholder Review & Extinguish blockers", type: "Review" }
+        ];
+
+        let currentSchedule = [...academicSchedule];
+
+        themeToggle.addEventListener('change', (e) => {
+            const isDark = e.target.checked;
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'professional');
+                modeLabel.textContent = "Executive";
+                workspaceTitle.textContent = "Ignite Executive";
+                workspaceSubtitle.textContent = "Execute strategic deliverables. Drive production.";
+                taskInput.placeholder = "Spark critical deliverable...";
+                addTaskBtn.textContent = "Execute";
+                currentSchedule = [...executiveSchedule];
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                modeLabel.textContent = "Student";
+                workspaceTitle.textContent = "Ignite Academics";
+                workspaceSubtitle.textContent = "Fuel your drive. Spark deep focus.";
+                taskInput.placeholder = "Spark a new assignment...";
+                addTaskBtn.textContent = "Ignite";
+                currentSchedule = [...academicSchedule];
+            }
+            renderTasks();
+            renderTimetable();
+            updateParticleColors(isDark); 
+        });
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.innerHTML = `
+                    <div class="task-content">
+                        <label class="checkbox-container">
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="task-text">${task.text}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+            const remaining = tasks.filter(t => !t.completed).length;
+            itemsCounter.textContent = `${remaining} burning`;
+        }
+
+        function addTask() {
+            const txt = taskInput.value.trim();
+            if(!txt) return;
+            tasks.push({ id: Date.now(), text: txt, completed: false });
+            taskInput.value = '';
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? {...t, completed: !t.completed} : t);
+            setTimeout(renderTasks, 180);
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+
+        function renderTimetable() {
+            slotsContainer.innerHTML = '';
+            currentSchedule.forEach(slot => {
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time-slot';
+                timeDiv.textContent = slot.time;
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'schedule-card';
+                cardDiv.innerHTML = `<div class="title">${slot.title}</div><div class="type-tag">${slot.type}</div>`;
+                slotsContainer.appendChild(timeDiv);
+                slotsContainer.appendChild(cardDiv);
+            });
+        }
+
+        addTaskBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addTask(); });
+        clearTaskBtn.addEventListener('click', () => { tasks = tasks.filter(t => !t.completed); renderTasks(); });
+
+        const canvas = document.getElementById('fire-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+
+        let colors = {
+            p1: getComputedStyle(document.documentElement).getPropertyValue('--part-1').trim(),
+            p2: getComputedStyle(document.documentElement).getPropertyValue('--part-2').trim(),
+            p3: getComputedStyle(document.documentElement).getPropertyValue('--part-3').trim()
+        };
+
+        function updateParticleColors(isDark) {
+            const target = isDark ? document.querySelector('[data-theme="professional"]') : document.documentElement;
+            const style = getComputedStyle(target);
+            colors.p1 = style.getPropertyValue('--part-1').trim();
+            colors.p2 = style.getPropertyValue('--part-2').trim();
+            colors.p3 = style.getPropertyValue('--part-3').trim();
+        }
+
+        function setCanvasSize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = h + Math.random() * 20; 
+                this.speedY = Math.random() * 2 + 1; 
+                this.speedX = Math.random() * 1 - 0.5; 
+                this.size = Math.random() * 3 + 1;
+                this.life = Math.random() * 100 + 50;
+                this.maxLife = this.life;
+                
+                const r = Math.random();
+                if (r < 0.6) this.color = colors.p1; 
+                else if (r < 0.9) this.color = colors.p2;
+                else this.color = colors.p3; 
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                this.life--;
+                
+           
+                if (this.size > 0.1) this.size -= 0.02;
+                
+                if (this.life <= 0 || this.y < -10) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.globalAlpha = this.life / this.maxLife;  
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+          
+                ctx.arc(this.x, this.y, this.size * 2, 0, Math.random() * Math.PI * 2);
+                ctx.fill();
+                
+                ctx.globalAlpha = 1;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+           
+            const particleCount = Math.floor((w * h) / 3000); 
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h); 
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            setCanvasSize();
+            initParticles();
+        });
+        
+        setCanvasSize();
+        initParticles();
+        animate();
+ 
+        renderTasks();
+        renderTimetable();
+    </script>
+</body>
+</html>
